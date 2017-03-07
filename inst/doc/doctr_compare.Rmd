@@ -1,0 +1,106 @@
+---
+title: "Comparing tables with doctr"
+author: "Caio Lente"
+date: "2017-03-06"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Comparing tables with doctr}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, echo = FALSE, message = FALSE}
+library(tidyverse)
+library(doctr)
+data(mpg)
+```
+
+## About
+
+`doctr` is an R package that helps you check the consistency and the
+quality of data.
+
+The goal of the package is, in other words, automating as much as
+possible the task of verifying if everything is ok with a dataset.
+Like a real doctor, it has functions for examining,
+diagnosing and assessing the progress of its "patients'".
+
+Since `doctr` was created with the [Tidy Tools Manifesto](https://CRAN.R-project.org/package=tidyverse/vignettes/manifesto.html) in mind,
+it works perfectly alongiside the [tidyverse](https://github.com/tidyverse).
+
+## Comparing datasets with doctr
+
+One of `doctr`'s main functions is `compare()`, which
+compares the profiles of two tables, checking if they can be
+considered similar enough. This is very useful when we're
+dealing with the evolution of a table over time, e.g.
+we receive some data gathered in January and then some data
+gathered in February.
+
+After running `diagnose()`, we can use the `issues()` function
+to get a report about the results of the comparison.
+
+Let's see how this works with an example dataset: `ggplot2::mpg`.
+Since we don't have multiple versions of `mpg`, I'm going to use
+the full dataset as the "January" version and a random sample as the
+"February" version.
+
+```{r}
+# Creating aritificial versions of the dataset
+mpg_jan <- mpg
+mpg_feb <- sample_n(mpg, 100)
+
+# Comparing mpg_jan and mpg_feb
+comparison <- compare(mpg_jan, mpg_feb)
+```
+
+Now the `comparison` object contains all the errors found while comparing
+the two datasets. By using `issues()` we can get human-readable reports on these
+errors.
+
+```{r}
+# Getting summary of comparison
+issues(comparison)
+```
+
+Using the `i` parameter of `issues()` paired with `verbose`,
+we can pass the name or index of a column in order to get only
+the issues associated with it.
+
+```{r}
+# Get results for 1st column
+issues(comparison, i = 3, verbose = TRUE)
+
+# Get results for fl column
+issues(comparison, i = "hwy", verbose = TRUE)
+```
+
+There are many issues that can arise during a comparison, each being
+a code for a summary statistic of `examine()` (for more information
+see `vignette("doctr_examine")`) and if that specific value was considered
+too low or too high; here's what each of these codes mean and for which
+types of variables they come up:
+
+
+| column | numeric | text | factor | description |
+|---|:---:|:---:|:---:|---|
+| `min`, `max` | x | x |  | minimum and maximum value/length |
+| `1%`, ..., `99%` | x | x |  | value/length percentiles |
+| `mean` | x | x |  | mean value/length |
+| `sd` | x | x |  | value/length standard deviation |
+| `na`, `val` | x | x |  | percentage of missing and non-missing entries |
+| `neg`, `zero`, `pos` | x |  |  | percentage of negative, zero and positive values |
+| `unq` | x | x |  | count of unique values/texts |
+| `mdp` | x |  |  | maximum number of decimal places |
+| `asc` |  | x |  | equals 1 if the text is identified as ASCII |
+| `ltr`, `num` |  | x |  | percentage of text that is identified as letters and numbers |
+| `data` |  |  | x | each factor level |
+| `cnt`, `frq` |  |  | x | count and frequency of each level |
+
+
+It is also possible to make the comparison more or less sensitive with different `ci`
+(confidence intervals) values.
+
+```{r}
+mpg_jan %>% compare(mpg_feb, ci = 0.5) %>% issues()
+```

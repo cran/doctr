@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="author" content="Caio Lente" />
+
+<meta name="date" content="2017-03-06" />
+
+<title>EDA automation with doctr</title>
+
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+</style>
+
+
+
+<link href="data:text/css;charset=utf-8,body%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E35%3B%0A%7D%0A%23header%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0Amargin%3A%200%200%2010px%2010px%3B%0Apadding%3A%204px%3B%0Awidth%3A%20400px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%200%2E5em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0Aborder%2Dradius%3A%203px%3B%0Acolor%3A%20%23333%3B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0A%7D%0Apre%20%7B%0Aborder%2Dradius%3A%203px%3B%0Amargin%3A%205px%200px%2010px%200px%3B%0Apadding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Aborder%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0Amargin%2Dleft%3A%208px%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah5%2C%20h6%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23ccc%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%230033dd%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%20code%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" rel="stylesheet" type="text/css" />
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">EDA automation with doctr</h1>
+<h4 class="author"><em>Caio Lente</em></h4>
+<h4 class="date"><em>2017-03-06</em></h4>
+
+
+
+<div id="about" class="section level2">
+<h2>About</h2>
+<p><code>doctr</code> is an R package that helps you check the consistency and the quality of data.</p>
+<p>The goal of the package is, in other words, automating as much as possible the task of verifying if everything is ok with a dataset. Like a real doctor, it has functions for examining, diagnosing and assessing the progress of its “patients’”.</p>
+<p>Since <code>doctr</code> was created with the <a href="https://CRAN.R-project.org/package=tidyverse/vignettes/manifesto.html">Tidy Tools Manifesto</a> in mind, it works perfectly alongiside the <a href="https://github.com/tidyverse">tidyverse</a>.</p>
+</div>
+<div id="exploring-datasets-with-doctr" class="section level2">
+<h2>Exploring datasets with doctr</h2>
+<p>One of <code>doctr</code>’s main fuctions is <code>examine()</code>, which gets the summary statistics for every column of a table, varying the summarization strategy depending on the type of variable.</p>
+<p>After running <code>examine()</code>, we can use the <code>report_*()</code> family of functions to get the different types of reports back. <code>report_num()</code> is used for numeric varibales, <code>report_txt()</code> for text variables and <code>report_fct()</code> for factor variables.</p>
+<p>Let’s see how this works with an example dataset: <code>ggplot2::mpg</code>. For the sake of this example, I’m going to transform the <code>class</code> column into a factor.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Converting class to factor</span>
+mpg$class &lt;-<span class="st"> </span><span class="kw">as.factor</span>(mpg$class)</code></pre></div>
+<p>Now we have 3 main types of variables represented in this table: numeric, text and factor. When we run <code>examine()</code>, the function is going to treat each column differently depending on in which of these groups it fits; if it can’t classify the column, <code>examine()</code> always defaults to text.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Creating the EDA</span>
+eda &lt;-<span class="st"> </span><span class="kw">examine</span>(mpg)</code></pre></div>
+<p>With the <code>eda</code> object we can get all 3 exploratory analyses.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Getting report of numeric variables</span>
+<span class="kw">report_num</span>(eda)</code></pre></div>
+<pre><code>## # A tibble: 5 × 26
+##    name   len    min   max   `1%`   `5%`  `10%`  `20%`  `30%`  `40%`
+##   &lt;chr&gt; &lt;int&gt;  &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;
+## 1 displ   234    1.6     7    1.6    1.8    2.0    2.2    2.5    2.8
+## 2  year   234 1999.0  2008 1999.0 1999.0 1999.0 1999.0 1999.0 1999.0
+## 3   cyl   234    4.0     8    4.0    4.0    4.0    4.0    4.0    6.0
+## 4   cty   234    9.0    35    9.0   11.0   11.0   13.0   14.0   15.0
+## 5   hwy   234   12.0    44   12.0   15.0   16.3   17.0   19.0   22.0
+## # ... with 16 more variables: `50%` &lt;dbl&gt;, `60%` &lt;dbl&gt;, `70%` &lt;dbl&gt;,
+## #   `80%` &lt;dbl&gt;, `90%` &lt;dbl&gt;, `95%` &lt;dbl&gt;, `99%` &lt;dbl&gt;, mean &lt;dbl&gt;,
+## #   sd &lt;dbl&gt;, na &lt;dbl&gt;, val &lt;dbl&gt;, neg &lt;dbl&gt;, zero &lt;dbl&gt;, pos &lt;dbl&gt;,
+## #   unq &lt;int&gt;, mdp &lt;dbl&gt;</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Getting report of text variables</span>
+<span class="kw">report_txt</span>(eda)</code></pre></div>
+<pre><code>## # A tibble: 5 × 25
+##           name   len   min   max  `1%`  `5%` `10%` `20%` `30%` `40%` `50%`
+##          &lt;chr&gt; &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+## 1 manufacturer   234     4    10     4   4.0     4     4     5     5     6
+## 2        model   234     2    22     2   4.3     5     6     7    10    11
+## 3        trans   234     8    10     8   8.0     8     8     8     8     8
+## 4          drv   234     1     1     1   1.0     1     1     1     1     1
+## 5           fl   234     1     1     1   1.0     1     1     1     1     1
+## # ... with 14 more variables: `60%` &lt;dbl&gt;, `70%` &lt;dbl&gt;, `80%` &lt;dbl&gt;,
+## #   `90%` &lt;dbl&gt;, `95%` &lt;dbl&gt;, `99%` &lt;dbl&gt;, mean &lt;dbl&gt;, sd &lt;dbl&gt;, na &lt;dbl&gt;,
+## #   val &lt;dbl&gt;, unq &lt;int&gt;, asc &lt;dbl&gt;, ltr &lt;dbl&gt;, num &lt;dbl&gt;</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Getting report of factor variables</span>
+<span class="kw">report_fct</span>(eda)</code></pre></div>
+<pre><code>## # A tibble: 7 × 4
+##    name       data   cnt        frq
+##   &lt;chr&gt;     &lt;fctr&gt; &lt;int&gt;      &lt;dbl&gt;
+## 1 class    2seater     5 0.02136752
+## 2 class    compact    47 0.20085470
+## 3 class    midsize    41 0.17521368
+## 4 class    minivan    11 0.04700855
+## 5 class     pickup    33 0.14102564
+## 6 class subcompact    35 0.14957265
+## 7 class        suv    62 0.26495726</code></pre>
+<p>The tables produced are very wide, so I won’t show them here in their integrity, but the names of the columns in the reports are codes for each summary statistic; here’s what each of them mean and in which reports they come up:</p>
+<table>
+<thead>
+<tr class="header">
+<th>column</th>
+<th align="center">numeric</th>
+<th align="center">text</th>
+<th align="center">factor</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>name</code></td>
+<td align="center">x</td>
+<td align="center">x</td>
+<td align="center">x</td>
+<td>name of the variable</td>
+</tr>
+<tr class="even">
+<td><code>min</code>, <code>max</code></td>
+<td align="center">x</td>
+<td align="center">x</td>
+<td align="center"></td>
+<td>minimum and maximum value/length</td>
+</tr>
+<tr class="odd">
+<td><code>1%</code>, …, <code>99%</code></td>
+<td align="center">x</td>
+<td align="center">x</td>
+<td align="center"></td>
+<td>value/length percentiles</td>
+</tr>
+<tr class="even">
+<td><code>mean</code></td>
+<td align="center">x</td>
+<td align="center">x</td>
+<td align="center"></td>
+<td>mean value/length</td>
+</tr>
+<tr class="odd">
+<td><code>sd</code></td>
+<td align="center">x</td>
+<td align="center">x</td>
+<td align="center"></td>
+<td>value/length standard deviation</td>
+</tr>
+<tr class="even">
+<td><code>na</code>, <code>val</code></td>
+<td align="center">x</td>
+<td align="center">x</td>
+<td align="center"></td>
+<td>percentage of missing and non-missing entries</td>
+</tr>
+<tr class="odd">
+<td><code>neg</code>, <code>zero</code>, <code>pos</code></td>
+<td align="center">x</td>
+<td align="center"></td>
+<td align="center"></td>
+<td>percentage of negative, zero and positive values</td>
+</tr>
+<tr class="even">
+<td><code>unq</code></td>
+<td align="center">x</td>
+<td align="center">x</td>
+<td align="center"></td>
+<td>count of unique values/texts</td>
+</tr>
+<tr class="odd">
+<td><code>mdp</code></td>
+<td align="center">x</td>
+<td align="center"></td>
+<td align="center"></td>
+<td>maximum number of decimal places</td>
+</tr>
+<tr class="even">
+<td><code>asc</code></td>
+<td align="center"></td>
+<td align="center">x</td>
+<td align="center"></td>
+<td>equals 1 if the text is identified as ASCII</td>
+</tr>
+<tr class="odd">
+<td><code>ltr</code>, <code>num</code></td>
+<td align="center"></td>
+<td align="center">x</td>
+<td align="center"></td>
+<td>percentage of text that is identified as letters and numbers</td>
+</tr>
+<tr class="even">
+<td><code>data</code></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center">x</td>
+<td>each factor level</td>
+</tr>
+<tr class="odd">
+<td><code>cnt</code>, <code>frq</code></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center">x</td>
+<td>count and frequency of each level</td>
+</tr>
+</tbody>
+</table>
+<div id="grouping" class="section level3">
+<h3>Grouping</h3>
+<p>Like with a <code>group_by()</code> statement, it is also possible to divide the table before getting the EDA. We do this with the <code>group</code> argument of the <code>examine()</code> function and then collect the results with the same argument of the <code>report_*()</code> family.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Creating the EDA (grouped by the class variable)</span>
+eda &lt;-<span class="st"> </span><span class="kw">examine</span>(mpg, <span class="dt">group =</span> <span class="st">&quot;class&quot;</span>)</code></pre></div>
+<p>For <code>examine()</code>, <code>group</code> receives the name or index of a column. When collecting the reports, <code>group</code> receives the level of the grouped variable from which we want the results.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Getting report of numeric variables for compact cars</span>
+<span class="kw">report_num</span>(eda, <span class="dt">group =</span> <span class="st">&quot;compact&quot;</span>)</code></pre></div>
+<pre><code>## # A tibble: 5 × 26
+##    name   len    min    max    `1%`   `5%`  `10%`   `20%` `30%` `40%`
+##   &lt;chr&gt; &lt;int&gt;  &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+## 1 displ    47    1.8    3.3    1.80    1.8    1.8    1.92     2     2
+## 2  year    47 1999.0 2008.0 1999.00 1999.0 1999.0 1999.00  1999  1999
+## 3   cyl    47    4.0    6.0    4.00    4.0    4.0    4.00     4     4
+## 4   cty    47   15.0   33.0   15.00   16.0   16.6   18.00    18    19
+## 5   hwy    47   23.0   44.0   23.46   24.3   25.0   25.20    26    27
+## # ... with 16 more variables: `50%` &lt;dbl&gt;, `60%` &lt;dbl&gt;, `70%` &lt;dbl&gt;,
+## #   `80%` &lt;dbl&gt;, `90%` &lt;dbl&gt;, `95%` &lt;dbl&gt;, `99%` &lt;dbl&gt;, mean &lt;dbl&gt;,
+## #   sd &lt;dbl&gt;, na &lt;dbl&gt;, val &lt;dbl&gt;, neg &lt;dbl&gt;, zero &lt;dbl&gt;, pos &lt;dbl&gt;,
+## #   unq &lt;int&gt;, mdp &lt;dbl&gt;</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Getting report of text variables for SUVs</span>
+<span class="kw">report_txt</span>(eda, <span class="dt">group =</span> <span class="st">&quot;suv&quot;</span>)</code></pre></div>
+<pre><code>## # A tibble: 5 × 25
+##           name   len   min   max  `1%`  `5%` `10%` `20%` `30%` `40%` `50%`
+##          &lt;chr&gt; &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+## 1 manufacturer    62     4    10     4     4     4     4     5     6     6
+## 2        model    62    11    22    11    11    11    11    12    12    13
+## 3        trans    62     8    10     8     8     8     8     8     8     8
+## 4          drv    62     1     1     1     1     1     1     1     1     1
+## 5           fl    62     1     1     1     1     1     1     1     1     1
+## # ... with 14 more variables: `60%` &lt;dbl&gt;, `70%` &lt;dbl&gt;, `80%` &lt;dbl&gt;,
+## #   `90%` &lt;dbl&gt;, `95%` &lt;dbl&gt;, `99%` &lt;dbl&gt;, mean &lt;dbl&gt;, sd &lt;dbl&gt;, na &lt;dbl&gt;,
+## #   val &lt;dbl&gt;, unq &lt;int&gt;, asc &lt;dbl&gt;, ltr &lt;dbl&gt;, num &lt;dbl&gt;</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Getting report of factor variables for midsize cars</span>
+<span class="kw">report_fct</span>(eda, <span class="dt">group =</span> <span class="st">&quot;midsize&quot;</span>)</code></pre></div>
+<pre><code>## # A tibble: 1 × 4
+##    name    data   cnt   frq
+##   &lt;chr&gt;  &lt;fctr&gt; &lt;int&gt; &lt;dbl&gt;
+## 1 class midsize    41     1</code></pre>
+</div>
+</div>
+
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

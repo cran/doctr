@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="author" content="Caio Lente" />
+
+<meta name="date" content="2017-03-06" />
+
+<title>Dataset diagnostics with doctr</title>
+
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+</style>
+
+
+
+<link href="data:text/css;charset=utf-8,body%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E35%3B%0A%7D%0A%23header%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0Amargin%3A%200%200%2010px%2010px%3B%0Apadding%3A%204px%3B%0Awidth%3A%20400px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%200%2E5em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0Aborder%2Dradius%3A%203px%3B%0Acolor%3A%20%23333%3B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0A%7D%0Apre%20%7B%0Aborder%2Dradius%3A%203px%3B%0Amargin%3A%205px%200px%2010px%200px%3B%0Apadding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Aborder%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0Amargin%2Dleft%3A%208px%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah5%2C%20h6%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23ccc%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%230033dd%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%20code%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" rel="stylesheet" type="text/css" />
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Dataset diagnostics with doctr</h1>
+<h4 class="author"><em>Caio Lente</em></h4>
+<h4 class="date"><em>2017-03-06</em></h4>
+
+
+
+<div id="about" class="section level2">
+<h2>About</h2>
+<p><code>doctr</code> is an R package that helps you check the consistency and the quality of data.</p>
+<p>The goal of the package is, in other words, automating as much as possible the task of verifying if everything is ok with a dataset. Like a real doctor, it has functions for examining, diagnosing and assessing the progress of its “patients’”.</p>
+<p>Since <code>doctr</code> was created with the <a href="https://CRAN.R-project.org/package=tidyverse/vignettes/manifesto.html">Tidy Tools Manifesto</a> in mind, it works perfectly alongiside the <a href="https://github.com/tidyverse">tidyverse</a>.</p>
+</div>
+<div id="creating-dataset-diagnostics-with-doctr" class="section level2">
+<h2>Creating dataset diagnostics with doctr</h2>
+<p>One of <code>doctr</code>’s main fuctions is <code>diagnose()</code>, which runs tests (nicknamed “exams”) on a table to check if its variables pass certain standards and fit certain assumptions.</p>
+<p>After running <code>diagnose()</code>, we can use the <code>issues()</code> function to get a report about the results of the exams.</p>
+<p>Let’s see how this works with an example dataset: <code>ggplot2::mpg</code>.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Runninng exams on table</span>
+diagnostics &lt;-<span class="st"> </span><span class="kw">diagnose</span>(mpg)</code></pre></div>
+<p>Now the <code>diagnostics</code> object contains all the errors found while diagnosing the <code>mpg</code> dataset. By using <code>issues()</code> we can get human-readable reports on these errors.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Getting summary of diagnostics</span>
+<span class="kw">issues</span>(diagnostics)</code></pre></div>
+<pre><code>## No issues found in 'manufacturer'
+## No issues found in 'model'
+## No issues found in 'displ'
+## No issues found in 'year'
+## No issues found in 'cyl'
+## No issues found in 'trans'
+## No issues found in 'drv'
+## No issues found in 'cty'
+## No issues found in 'hwy'
+## No issues found in 'fl'
+## No issues found in 'class'</code></pre>
+<p>Since <code>mpg</code> is already very well-formed, no issues were found. I’m going to artificially break the table so we can see what issues look like (I’m also turning <code>verbose</code> on so the function shows exactly what the issues were).</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Manually breaking mpg</span>
+mpg2 &lt;-<span class="st"> </span>mpg %&gt;%
+<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">year =</span> <span class="kw">as.Date</span>(year, <span class="dt">origin =</span> <span class="st">&quot;1970-01-01&quot;</span>))
+
+<span class="co"># Getting summary of diagnostics</span>
+mpg2 %&gt;%<span class="st"> </span><span class="kw">diagnose</span>() %&gt;%<span class="st"> </span><span class="kw">issues</span>(<span class="dt">verbose =</span> <span class="ot">TRUE</span>)</code></pre></div>
+<pre><code>## No issues found in 'manufacturer'
+## No issues found in 'model'
+## No issues found in 'displ'
+## Issues found in 'year'
+##     Data isn't of type factor
+## No issues found in 'cyl'
+## No issues found in 'trans'
+## No issues found in 'drv'
+## No issues found in 'cty'
+## No issues found in 'hwy'
+## No issues found in 'fl'
+## No issues found in 'class'</code></pre>
+<p>As we can see, <code>diagnose()</code> was able to parse <code>year</code>, but it alerted us that it isn’t a character variable.</p>
+<div id="creating-custom-exams" class="section level3">
+<h3>Creating custom exams</h3>
+<p><code>diagnose()</code> by default uses a function called <code>guess_exams()</code> to generate the exams it is going to run on a given table. This special function grabs a sample of the table and tries to assign each of its variables to one of the types below (from most to least restrictive):</p>
+<ul>
+<li><code>percentage</code>: must be only numeric values between 0 and 1</li>
+<li><code>money</code>: must be positive values and have at most 2 decimal places</li>
+<li><code>count</code>: must be positive integers</li>
+<li><code>quantity</code>: must be positive values</li>
+<li><code>continuous</code>: must be numeric values</li>
+<li><code>categorical</code>: must be factors</li>
+<li><code>character</code>: must be text</li>
+</ul>
+<p>If you run <code>guess_exams()</code> by yourself, you can customize the exams it generates and then pass them as an argument to <code>diganose()</code> so that it uses you custom exams.</p>
+<p>Let’s see how this works in practice.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">exams &lt;-<span class="st"> </span><span class="kw">guess_exams</span>(mpg)</code></pre></div>
+<table>
+<thead>
+<tr class="header">
+<th align="left">cols</th>
+<th align="left">funs</th>
+<th align="left">max_na</th>
+<th align="left">min_val</th>
+<th align="left">max_val</th>
+<th align="left">max_dec_places</th>
+<th align="left">min_unq</th>
+<th align="left">max_unq</th>
+<th align="left">least_frec_cls</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">manufacturer</td>
+<td align="left">character</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">model</td>
+<td align="left">character</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">displ</td>
+<td align="left">quantity</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">year</td>
+<td align="left">count</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">cyl</td>
+<td align="left">count</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">trans</td>
+<td align="left">character</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">drv</td>
+<td align="left">character</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">cty</td>
+<td align="left">count</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">hwy</td>
+<td align="left">count</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">fl</td>
+<td align="left">character</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">class</td>
+<td align="left">character</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+</tbody>
+</table>
+<p>Each columns in <code>exams</code> can be filled with a parameter that is going to be used by <code>diagnose()</code> to find problems in <code>mpg</code>. These are the meanings of these parameters and to what variable types they apply (for more information on types, run <code>vignette(doctr_examine)</code>):</p>
+<table style="width:36%;">
+<colgroup>
+<col width="5%"></col>
+<col width="8%"></col>
+<col width="8%"></col>
+<col width="8%"></col>
+<col width="5%"></col>
+</colgroup>
+<thead>
+<tr class="header">
+<th>parameter</th>
+<th align="center">numeric</th>
+<th align="center">text</th>
+<th align="center">factor</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>funs</code></td>
+<td align="center">x</td>
+<td align="center">x</td>
+<td align="center">x</td>
+<td>which type should be used for base exams (<code>percentage</code>, <code>money</code>, etc.)</td>
+</tr>
+<tr class="even">
+<td><code>max_na</code></td>
+<td align="center">x</td>
+<td align="center">x</td>
+<td align="center">x</td>
+<td>maximum % of NAs</td>
+</tr>
+<tr class="odd">
+<td><code>min_val</code>, <code>max_val</code></td>
+<td align="center">x</td>
+<td align="center"></td>
+<td align="center"></td>
+<td>minimum and maximum values</td>
+</tr>
+<tr class="even">
+<td><code>max_dec_places</code></td>
+<td align="center">x</td>
+<td align="center"></td>
+<td align="center"></td>
+<td>maximum number of decimal places</td>
+</tr>
+<tr class="odd">
+<td><code>min_unq</code>, <code>max_unq</code></td>
+<td align="center"></td>
+<td align="center">x</td>
+<td align="center">x</td>
+<td>minimum and maximum number of unique classes</td>
+</tr>
+<tr class="even">
+<td><code>least_freq_cls</code></td>
+<td align="center"></td>
+<td align="center">x</td>
+<td align="center">x</td>
+<td>minimum % of the total a class can represent</td>
+</tr>
+</tbody>
+</table>
+<p>Let’s customize these exams and use them with <code>diagnose()</code>.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Setting some arbritraty maximum and minimum values</span>
+exams$max_val[<span class="dv">8</span>] &lt;-<span class="st"> </span><span class="dv">30</span>
+exams$min_val[<span class="dv">9</span>] &lt;-<span class="st"> </span><span class="dv">15</span>
+
+<span class="co"># Setting least frequent class</span>
+exams$least_frec_cls[<span class="dv">10</span>] &lt;-<span class="st"> </span><span class="fl">0.2</span>
+
+<span class="co"># Setting maximum unique classes</span>
+exams$max_unq[<span class="dv">1</span>] &lt;-<span class="st"> </span><span class="dv">10</span>
+
+<span class="co"># Use custom exams to diagnose table</span>
+mpg %&gt;%<span class="st"> </span><span class="kw">diagnose</span>(exams) %&gt;%<span class="st"> </span><span class="kw">issues</span>()</code></pre></div>
+<pre><code>## Issues found in 'manufacturer'
+## No issues found in 'model'
+## No issues found in 'displ'
+## No issues found in 'year'
+## No issues found in 'cyl'
+## No issues found in 'trans'
+## No issues found in 'drv'
+## Issues found in 'cty'
+## Issues found in 'hwy'
+## Issues found in 'fl'
+## No issues found in 'class'</code></pre>
+<p>Using the <code>i</code> parameter of <code>issues()</code> paired with <code>verbose</code>, we can pass the name or index of a column in order to get only the issues associated with it.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Use custom exams to diagnose table</span>
+diagnostics &lt;-<span class="st"> </span><span class="kw">diagnose</span>(mpg, exams)
+
+<span class="co"># Get results for 1st column</span>
+<span class="kw">issues</span>(diagnostics, <span class="dt">i =</span> <span class="dv">1</span>, <span class="dt">verbose =</span> <span class="ot">TRUE</span>)</code></pre></div>
+<pre><code>## Issues found in 'manufacturer'
+##     There are more than 10 unique classes</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Get results for fl column</span>
+<span class="kw">issues</span>(diagnostics, <span class="dt">i =</span> <span class="st">&quot;fl&quot;</span>, <span class="dt">verbose =</span> <span class="ot">TRUE</span>)</code></pre></div>
+<pre><code>## Issues found in 'fl'
+##     There are 3 classes that represent less than 20% of the total</code></pre>
+</div>
+</div>
+
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
